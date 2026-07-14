@@ -19,6 +19,8 @@ CI gate: node scripts/build-readme.mjs --check
 ## Содержание
 
 - [Quickstart](#quickstart-за-10-минут)
+- [Claude Code vs OpenClaw vs Hermes](#claude-code-vs-openclaw-vs-hermes) — три парадигмы AI-агентов Anthropic
+- [OpenClaw: установка и настройка](#openclaw-установка-и-настройка) — managed agent платформа Anthropic
 - [Harness (обвязка)](#harness-обвязка) — концепт «обвязка важнее модели» + автономный pipeline
 - [Skills](#skills) — переиспользуемые наборы инструкций
 - [Sub-agents](#sub-agents) — параллельные агенты со своим контекстом
@@ -70,6 +72,156 @@ claude mcp add postgres    # @modelcontextprotocol/server-postgres (read-only п
 3. [Hooks](#hooks) — поставь хотя бы `pre-commit-secrets` сразу: спасает от утечки API-ключей через git-коммит, который агент может сделать за 30 секунд.
 4. [Шаблоны CLAUDE.md](#claudemd-шаблоны) — три production-шаблона: Next.js, Python/FastAPI, Terraform.
 5. [Гайды на русском](#гайды-и-контент-на-русском) — <!-- @count-ru:ru-content.habr|статья|статьи|статей --> с Habr + <!-- @count-ru:ru-content.youtube|YouTube-курс|YouTube-курса|YouTube-курсов --> + DTF.
+
+---
+
+## Claude Code vs OpenClaw vs Hermes
+
+**Три парадигмы AI-агентов от Anthropic (2026):**
+
+| Парадигма | Интерфейс | Среда | Управление | Для кого | Модель |
+|---|---|---|---|---|---|
+| **Claude Code** | CLI (npm/brew/desktop/VSCode) | Локальное ядро, потоковая сессия | Ручное — prompt-driven, hooks, CLAUDE.md | Разработчики-одиночки, маленькие команды | Opus 4.7+, Sonnet |
+| **OpenClaw** | Cloud console + API + SDK | Managed — Anthropic инфра | Declarative — agents, tasks, goals (UI/code) | Команды, автоматизация бизнес-процессов | Opus 4.7+ |
+| **Hermes** | Собственный IDE / Web | Remote eval (Anthropic sandbox) | Semi-autonomous — goal-driven с human-in-loop | Исследование, сложные многашаговые задачи | Opus 4.7+ |
+
+**Когда выбирать:**
+
+- **Claude Code** — быстрые итерации, full-stack разработка, маленький код, work in progress видна сразу. Агент в твоём терминале — не нужна сеть. Максимум контроля, минимум abstractions.
+- **OpenClaw** — повторяемые процессы, многошаговые workflows, бюджетная оптимизация (фоновые задачи), scaling (100 агентов параллельно). Декларативное описание целей, agent handles orchestration.
+- **Hermes** — отложенные задачи, очень длинные contextes (100K–200K+ токенов), когда deadline не сжат, exploring solution space. Модель может потратить час на одну задачу, но разберётся глубже.
+
+> 📄 Deep dive: [Три парадигмы ИИ-агентов в 2026: Claude Code / OpenClaw / Hermes](https://vc.ru/ai/2911692-iskusstvennyj-intellekt-dlja-biznesa) на vc.ru — Opus 4.7, бюджеты задач, контекст 1M токенов.
+
+---
+
+## OpenClaw: установка и настройка
+
+OpenClaw — managed agent платформа от Anthropic. Отличие от Claude Code: фокус на **declarative task definitions** вместо prompt-driven interaction, готовые orchestration-инструменты, budget-контроль, масштабируемость.
+
+### Быстрый старт
+
+**Шаг 1: Регистрация и API-ключ**
+
+```bash
+# 1. Заведи аккаунт на https://openclaw.anthropic.com
+# 2. В console → API Keys создай new key
+export ANTHROPIC_API_KEY="sk-ant-..."
+```
+
+**Шаг 2: Установка SDK**
+
+Выбери язык:
+
+```bash
+# Python
+pip install anthropic
+
+# TypeScript/Node
+npm install @anthropic-ai/sdk
+
+# Go
+go get github.com/anthropics/anthropic-sdk-go
+```
+
+**Шаг 3: Первая задача**
+
+```python
+import anthropic
+import os
+
+client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+
+# Создаём managed agent — вместо prompt'а пишем task description
+response = client.agents.run(
+    model="claude-opus-4-7-20250219",  # или claude-sonnet-4-20250514
+    instructions="Ты senior developer. Дай код-ревью для функции.",
+    tools=[],  # подключим MCP-серверы если надо
+)
+
+print(response)
+```
+
+### Когда OpenClaw лучше Claude Code
+
+1. **Automation / CronJobs** — запустить ночью агента, он проработает 10 часов, результаты в webhook/email.
+2. **Parallel processing** — 100 одинаковых задач в один момент. OpenClaw handle scheduling + resource allocation.
+3. **Budget control** — задать лимит на задачу, переполучить insights и затраты, отладить промпт экономнее.
+4. **Multi-agent coordination** — несколько агентов с shared context и handoff. No worktrees, no git-conflicts.
+5. **REST API + Web UI** — команда без CLI-скиллов может запускать агентов через web-форму.
+
+### Главные компоненты
+
+| Компонент | Описание |
+|---|---|
+| **Agents** | Named managed agents с инструкциями, tools, model selection. CRUD через API. |
+| **Tasks** | Экземпляры выполнения — input params, execution log, output, cost/tokens. Идемпотентны. |
+| **Goals** | High-level objectives; OpenClaw сам планирует subagents и task-sequence. Beta-фича. |
+| **Tools** | MCP-серверы, webhooks, custom actions. Подключаются через SDK. |
+| **Schedules** | Cron-выражения для periodic tasks. Управление через API или UI. |
+
+### Чек-лист настройки
+
+- [ ] API-ключ в `.env` (не коммитить!)
+- [ ] SDK установлен
+- [ ] Тестовый агент запущен через API
+- [ ] Подключены нужные tools (GitHub, Slack, DB если надо)
+- [ ] Budget-лимиты выставлены (Settings → Usage)
+- [ ] Webhook для результатов настроен (опционально)
+- [ ] Monitoring dashboard в консоли включён
+
+### Ограничения и особенности
+
+⚠️ **Важно для новичков:**
+
+- **Model access:** OpenClaw использует только Opus 4.7 / Sonnet. Claude 3.5 пока недоступен.
+- **Context size:** Начальный context 100K токенов. Для большего нужна enterprise-подписка.
+- **Sandboxing:** Agents не имеют доступа к твоей файловой системе напрямую — работают через MCP или API.
+- **Subscription tiers:** Free (5 tasks/день), Pro (unlimited tasks), Enterprise (SLA, multi-team, audit logs).
+- **Cold-start:** Первый запуск задачи может быть медленнее на 2–3 сек (инициализация kontexsta).
+
+### Соединение с Claude Code
+
+Часто используют оба инструмента вместе:
+
+- Claude Code **локально** — итерации, debugging, development
+- OpenClaw **в production** — повторяемые workflows, 24/7 автоматизация
+
+Пример: разработал скилл в Claude Code, упаковал в OpenClaw-агента, запустил по расписанию.
+
+```python
+# openclaw-agent.py
+# Управляет GitHub issues—reviews ночью через OpenClaw
+from anthropic import Anthropic
+
+client = Anthropic()
+
+# Агент для асинхронного ревью
+agent_id = client.agents.create(
+    name="night-reviewer",
+    model="claude-opus-4-7-20250219",
+    instructions="""
+    Найди незареданные PRs, сделай быструю стык-проверку:
+    - нет ли очевидных тип-лосс / lint-ошибок
+    - соответствует ли CONTRIBUTING.md
+    - нужны ли tests
+    """,
+).id
+
+# Запуск раз в сутки в 00:00 UTC
+client.agents.schedules.create(
+    agent_id=agent_id,
+    cron="0 0 * * *",
+)
+```
+
+### Ресурсы
+
+<!-- @list:openclaw.resources -->
+
+### Туториалы и примеры
+
+<!-- @list:openclaw.tutorials -->
 
 ---
 

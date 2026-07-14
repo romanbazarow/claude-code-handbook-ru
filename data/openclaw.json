@@ -1,0 +1,29 @@
+{
+  "resources": [
+    { "name": "OpenClaw Official Console", "url": "https://openclaw.anthropic.com", "desc": "Управление агентами, задачами и бюджетом через web-интерфейс." },
+    { "name": "OpenClaw API Documentation", "url": "https://docs.anthropic.com/en/api/openclaw", "desc": "Полная API-справка для управления agents, tasks, goals, tools, schedules." },
+    { "name": "Anthropic SDK (Python)", "url": "https://github.com/anthropics/anthropic-sdk-python", "desc": "Официальный SDK для Python с поддержкой OpenClaw agents." },
+    { "name": "Anthropic SDK (TypeScript)", "url": "https://github.com/anthropics/anthropic-sdk-js", "desc": "Официальный SDK для Node.js / TypeScript." },
+    { "name": "Anthropic SDK (Go)", "url": "https://github.com/anthropics/anthropic-sdk-go", "desc": "Официальный SDK для Go." },
+    { "name": "OpenClaw Cookbook", "url": "https://github.com/anthropics/anthropic-cookbook", "desc": "Примеры паттернов: automated workflows, parallel agents, budget optimization." },
+    { "name": "Model Context Protocol (MCP)", "url": "https://modelcontextprotocol.io/", "desc": "Стандарт подключения tools и resources. Поддерживается OpenClaw agentsами." },
+    { "name": "awesome-openclaw-skills", "url": "https://sky-lv.github.io/awesome-openclaw-skills", "desc": "Коллекция готовых skills для OpenClaw agents." }
+  ],
+  "tutorials": [
+    { "name": "Getting Started with OpenClaw", "url": "https://docs.anthropic.com/en/docs/openclaw/getting-started", "desc": "Official quickstart guide для первой managed-task." },
+    { "name": "Building Declarative Workflows", "url": "https://docs.anthropic.com/en/docs/openclaw/workflows", "desc": "Как описать multi-step workflow через task definitions вместо prompt." },
+    { "name": "Parallel Agent Execution", "url": "https://docs.anthropic.com/en/docs/openclaw/parallel-agents", "desc": "Запуск 100+ агентов параллельно, coordination через shared context." },
+    { "name": "Budget Control and Cost Tracking", "url": "https://docs.anthropic.com/en/docs/openclaw/budgets", "desc": "Настройка per-task limits, audit logs затрат, оптимизация tokens/cost ratio." },
+    { "name": "Scheduling and Cron Tasks", "url": "https://docs.anthropic.com/en/docs/openclaw/schedules", "desc": "Периодические задачи: ночной ревью, ежедневная синхронизация, фоновые процессы." },
+    { "name": "Connecting MCP Tools", "url": "https://docs.anthropic.com/en/docs/openclaw/mcp-tools", "desc": "Подключение GitHub, Slack, databases и custom HTTP endpoints к agentsам." },
+    { "name": "Webhooks and Notifications", "url": "https://docs.anthropic.com/en/docs/openclaw/webhooks", "desc": "Callback на completion, error, timeout — интеграция с вашей системой." },
+    { "name": "Multi-Team and Enterprise Setup", "url": "https://docs.anthropic.com/en/docs/openclaw/enterprise", "desc": "RBAC, audit logs, dedicated infrastructure, SLA. Enterprise-only." }
+  ],
+  "examples": [
+    { "name": "night-reviewer — автоматический code-review", "url": "https://github.com/anthropics/anthropic-cookbook/tree/main/examples/openclaw/night-reviewer", "desc": "Агент запускается по расписанию, ревьючит открытые PRs, комментирует в GitHub." },
+    { "name": "issue-classifier — автоматическая категоризация issues", "url": "https://github.com/anthropics/anthropic-cookbook/tree/main/examples/openclaw/issue-classifier", "desc": "Параллельный обработчик: 1000 issues в одновремённых tasks, assign labels и priorities." },
+    { "name": "documentation-generator — автогенерация docs", "url": "https://github.com/anthropics/anthropic-cookbook/tree/main/examples/openclaw/doc-generator", "desc": "Читает исходники, генерирует README и API docs, коммитит в `docs/` ветку." },
+    { "name": "security-auditor — фоновый аудит безопасности", "url": "https://github.com/anthropics/anthropic-cookbook/tree/main/examples/openclaw/security-auditor", "desc": "Сканирует dependencies, проверяет known-vulnerabilities, отправляет отчёт в Slack." },
+    { "name": "data-sync — периодическая синхронизация", "url": "https://github.com/anthropics/anthropic-cookbook/tree/main/examples/openclaw/data-sync", "desc": "Агент синхронизирует данные между БД, кешем и API, запускается по cron." }
+  ]
+}

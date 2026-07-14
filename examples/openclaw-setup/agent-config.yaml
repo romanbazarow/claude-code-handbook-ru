@@ -1,0 +1,72 @@
+# OpenClaw Agent Configuration
+# Пример: автоматический code-reviewer запущенный по расписанию
+
+agent:
+  name: night-code-reviewer
+  description: "Автоматический reviewer PR'ов по ночам"
+  model: claude-opus-4-7-20250219
+
+  instructions: |
+    Ты senior backend developer с опытом code-review.
+
+    1. Найди все открытые PR'ы (используя GitHub tool)
+    2. Для каждого PR выполни быстрый review:
+       - нарушения lint / formatting (используй eslint/ruff info из diff)
+       - отсутствие tests
+       - явные логические ошибки
+       - соответствие project CONTRIBUTING guidelines
+    3. Прокомментируй findings на GitHub
+    4. Assign `needs-revision` label если нашлись проблемы
+    5. Assign `approved` label если всё хорошо
+
+    Будь конструктивен: не рассказывай что-то очевидное, предлагай решение.
+
+  # Инструменты для агента
+  tools:
+    - type: mcp-server
+      name: github
+      config:
+        owner: "your-github-org"
+        repo: "your-repo"
+        # GitHub token передаётся через env var
+    - type: mcp-server
+      name: filesystem
+      config:
+        allow_read: true
+        allow_write: false
+
+  # Бюджет на одно выполнение задачи
+  budget:
+    max_tokens: 100000
+    max_cost_usd: 2.0
+    timeout_seconds: 3600
+
+  # Метаданные для tracking
+  tags:
+    - automated-review
+    - nightly
+    - github-integration
+
+# Расписание запуска
+schedule:
+  cron: "0 23 * * *"  # Каждый день в 23:00 UTC
+  timezone: "UTC"
+  max_concurrent: 1
+
+# Webhook для результатов
+webhooks:
+  on_completion:
+    url: "https://your-domain.com/webhooks/openclaw/review-done"
+    method: POST
+    headers:
+      Authorization: "Bearer your-secret-token"
+
+# Environment variables (хранятся в OpenClaw console)
+environment:
+  GITHUB_TOKEN: ${GITHUB_TOKEN}
+  LOG_LEVEL: info
+
+# Retention policy
+retention:
+  keep_logs_days: 30
+  keep_outputs_days: 90
