@@ -1,0 +1,49 @@
+# Systemd service для OpenClaw агента на Hetzner Cloud
+# Установить: sudo cp openclaw.service /etc/systemd/system/
+# Запустить: sudo systemctl start openclaw && sudo systemctl enable openclaw
+# Логи: sudo journalctl -u openclaw -f
+
+[Unit]
+Description=OpenClaw Managed Agent Runner
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=openclaw
+Group=openclaw
+WorkingDirectory=/opt/openclaw
+
+# Environment variables (или грузим из файла)
+EnvironmentFile=/opt/openclaw/.env
+
+# Скрипт запуска
+ExecStart=/usr/bin/python3 /opt/openclaw/agent-runner.py
+
+# Автоперезагрузка при краше
+Restart=always
+RestartSec=10
+
+# Resource limits
+CPUQuota=75%
+MemoryLimit=1G
+MemoryAccounting=yes
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=openclaw
+
+# Security
+PrivateTmp=yes
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/opt/openclaw/logs /opt/openclaw/cache
+
+# Timeouts
+TimeoutStartSec=30
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

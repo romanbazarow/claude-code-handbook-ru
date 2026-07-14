@@ -1,0 +1,30 @@
+# Dockerfile для OpenClaw агента на Hetzner Cloud
+# Используется образ ubuntu 22.04 для максимальной совместимости
+# Занимает ~1.2 GB, пуллится с Hetzner Container Registry
+
+FROM python:3.11-slim-jammy
+
+WORKDIR /app
+
+# Установка системных зависимостей
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    jq \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Копируем requirements
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Копируем агент
+COPY agent-manager.py .
+COPY .env.example .env
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import anthropic; print('ok')" || exit 1
+
+# Запуск агента
+CMD ["python", "agent-manager.py"]

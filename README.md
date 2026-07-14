@@ -215,6 +215,52 @@ client.agents.schedules.create(
 )
 ```
 
+### Деплой на Hetzner Cloud
+
+OpenClaw хорошо работает на Hetzner — дешево, стабильно, хорошая латенция до европейских сервисов. Три варианта:
+
+**Вариант A: Standalone агент на одном сервере** (самый простой)
+
+```bash
+# 1. Создаёшь Hetzner Cloud server (CPX11 ~ €5/месяц)
+hcloud server create --name openclaw-agent --type cpx11 --image ubuntu-22.04
+
+# 2. SSH на сервер, устанавливаешь Python + SDK
+ssh root@<server-ip>
+apt update && apt install -y python3-pip
+pip install anthropic python-dotenv
+
+# 3. Загружаешь свой agent-manager.py
+# 4. Ставишь cron или systemd service для периодического запуска
+```
+
+**Вариант B: Docker контейнер в Hetzner** (рекомендуется)
+
+```bash
+# 1. Создаёшь Dockerfile
+# 2. Загружаешь образ в Hetzner Container Registry
+# 3. Запускаешь контейнер через systemd или docker-compose
+```
+
+**Вариант C: Kubernetes cluster** (для масштабирования — 100+ параллельных агентов)
+
+```bash
+# Развернуть на Hetzner Cloud через Terraform
+# Использовать HCloud CSI для volumes
+# Auto-scale по очереди OpenClaw задач
+```
+
+**Cost-оптимизация:**
+
+| Scenario | Сервер | Цена/месяц | Best for |
+|---|---|---|---|
+| Одна ночная задача в день | CPX11 (2 vCPU, 4GB) | €5 | night-reviewer, daily sync |
+| Несколько фоновых агентов | CPX21 (4 vCPU, 8GB) | €10 | batch processing |
+| 50+ параллельных задач | CPX41 (8 vCPU, 16GB) | €20 | bulk classification |
+| Масштабирование 100+ | 3× CPX41 + LB | €60 | production workflows |
+
+> 💡 **Лайфхак:** Используй Hetzner Firewall для ограничения ingress только от OpenClaw API. Используй Hetzner Volumes для persistent logs/outputs.
+
 ### Ресурсы
 
 - [OpenClaw Official Console](https://openclaw.anthropic.com) — Управление агентами, задачами и бюджетом через web-интерфейс.
